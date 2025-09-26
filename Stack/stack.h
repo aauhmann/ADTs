@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define type int
 #define DATA_NULL 0
+
+typedef int type;
 
 typedef struct Node {
     struct Node* prev;

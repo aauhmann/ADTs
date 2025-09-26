@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef Object type;
+
 typedef struct {
     int id;
     float price;

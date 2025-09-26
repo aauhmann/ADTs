@@ -4,7 +4,7 @@
 #include "stdio.h"
 #include "stdbool.h"
 
-#define type int
+typedef int type;
 
 typedef enum {FRONT, REAR} Location;
 
