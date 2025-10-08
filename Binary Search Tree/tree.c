@@ -56,7 +56,10 @@ void tree_insert(Tree* tree, type key) {
 }
 
 void node_print(Node* node) {
-    printf("\nKey: %d", node->key);
+    printf("\n");
+    for (int i = 0; i < node->depth; i++)
+        printf("=");
+    printf("%d", node->key);
 }
 
 void node_depth(Node* node) {
