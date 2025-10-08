@@ -36,27 +36,28 @@ int main() {
                 printf("\nKey: ");
                 scanf("%d", &key);
                 getchar();
-                tree_bykey(&tree, key, node_print);
+                tree_searchByKey(&tree, key, node_print);
                 break;
 
             case 3:
                 printf("\nKey: ");
                 scanf("%d", &key);
                 getchar();
-                tree_bykey(&tree, key, node_depth);
+                tree_searchByKey(&tree, key, node_depth);
                 break;
 
             case 4:
                 printf("\nKey: ");
                 scanf("%d", &key);
-                node = tree_bykey(&tree, key, NULL);
+                node = tree_searchByKey(&tree, key, NULL);
                 break;
 
             case 5:
+                Node* aux;
                 printf("\nKey: ");
                 scanf("%d", &key);
-                if (!tree_empty) printf("Node cleared (and all of its descendants)");
-                tree_bykey(&tree, key, node_clear);
+                aux = tree_searchByKey(&tree, key, NULL);
+                if (aux != NULL) node_clearByKey(&tree, aux);
                 break;
 
             case 6:
