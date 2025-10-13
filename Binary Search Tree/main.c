@@ -1,4 +1,4 @@
-#include "Tree.h"
+#include "bst.h"
 
 #define EXIT 9
 

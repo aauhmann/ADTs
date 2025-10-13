@@ -1,4 +1,4 @@
-#include "Tree.h"
+#include "avl.h"
 
 void tree_initialize(Tree* tree) {
     tree->root = NULL;
@@ -13,9 +13,12 @@ bool tree_empty(Tree tree) {
 void tree_insert(Tree* tree, type key) {
     Node* new = (Node*)malloc(sizeof(Node));
     Node* aux = tree->root;
+    bool neededRotation = false;
 
     new->key = key;
     new->left = new->right = NULL;
+    new->factor = 0;
+
     if (tree_empty(*tree)) {
         tree->root = new;
         tree->height = 1;
@@ -27,6 +30,7 @@ void tree_insert(Tree* tree, type key) {
     
     while (true) {
         if (key < aux->key) {
+            if (abs(aux->factor++) == 2) neededRotation = true;
             if (aux->left == NULL) {
                 aux->left = new;
                 break;
@@ -34,6 +38,7 @@ void tree_insert(Tree* tree, type key) {
             else aux = aux->left;
         }
         else if (key > aux->key) {
+            if (abs(aux->factor--) == 2) neededRotation = true;
             if (aux->right == NULL) {
                 aux->right = new;
                 break;
@@ -49,10 +54,14 @@ void tree_insert(Tree* tree, type key) {
     new->parent = aux;
     new->depth = aux->depth + 1;
 
-    if (tree->height < new->depth)
-        tree->height = new->depth;
-
     printf("Key %d inserted at depth %d", key, new->depth);
+    
+    if (neededRotation) {
+        subtree_rotate(tree, aux);
+        tree_height(tree);
+    }
+    else if (tree->height < new->depth)
+        tree->height = new->depth;
 }
 
 void node_print(Node* node) {
@@ -234,5 +243,16 @@ void tree_clear(Tree* tree) {
         tree->root = NULL;
         tree->height = 0;
         printf("\nTree cleared");
+    }
+}
+
+void subtree_rotate(Tree* tree, Node* root) {
+    while (root != NULL) {
+        if (root->factor > 1)
+            NULL;
+        else if (root->factor < -1)
+            NULL;
+
+        root = root->parent;
     }
 }
