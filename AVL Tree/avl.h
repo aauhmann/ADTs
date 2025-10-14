@@ -30,6 +30,7 @@ void tree_insert(Tree* tree, type key);
 void node_print(Node* node);
 void node_depth(Node* node);
 void node_depthDec(Node* node);
+void node_depthInc(Node* node);
 void node_clear(Node* node);
 void node_clearByKey(Tree* tree, Node* node);
 Node* tree_searchByKey(Tree* tree, type key, NodeFunction function);

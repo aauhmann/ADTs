@@ -79,6 +79,10 @@ void node_depthDec(Node* node) {
     node->depth--;
 }
 
+void node_depthInc(Node* node) {
+    node->depth++;
+}
+
 void node_clear(Node* node) {
     Node* parent = node->parent;
 
@@ -247,12 +251,96 @@ void tree_clear(Tree* tree) {
 }
 
 void subtree_rotate(Tree* tree, Node* root) {
-    while (root != NULL) {
-        if (root->factor > 1)
-            NULL;
-        else if (root->factor < -1)
-            NULL;
+    Node* parent;
 
-        root = root->parent;
+    while (root != NULL) {
+        parent = root->parent;
+
+        if (root->factor > 1) {
+            if (root->left->factor > 0)
+                subtree_rotateRight(tree, root);
+            else
+                subtree_doubleRotateRight(tree, root);
+        }
+        else if (root->factor < -1) {
+            if (root->right->factor < 0)
+                subtree_rotateLeft(tree, root);
+            else
+                subtree_doubleRotateLeft(tree, root);
+        }
+
+        root = parent;
     }
+}
+
+void subtree_rotateRight(Tree* tree, Node* root) {
+    Node* aux = root->parent;
+
+    if (aux == tree->root)
+        tree->root = root;
+
+    root->left = aux->right;
+    aux->parent = root->parent;
+    aux->right = root;
+    root->parent = aux;
+
+    root->depth++;
+    aux->depth--;
+    tree_inorder(root->right, node_depthInc);
+    tree_inorder(aux->left, node_depthDec);
+}
+
+void subtree_rotateLeft(Tree* tree, Node* root) {
+    Node* aux = root->right;
+
+    if (root == tree->root)
+        tree->root = aux;
+
+    root->right = aux->left;
+    aux->parent = root->parent;
+    aux->left = root;
+    root->parent = aux;
+
+    root->depth++;
+    aux->depth--;
+    tree_inorder(root->left, node_depthInc);
+    tree_inorder(aux->right, node_depthDec);
+}
+
+void subtree_doubleRotateRight(Tree* tree, Node* root) {
+    Node* auxL = root->left;
+    Node* auxR = auxL->right;
+
+    auxL->right = auxR->left;
+    auxR->left->parent = auxL->right;
+    root->left = auxR->right;
+    auxR->right->parent = root;
+    auxR->parent = root->parent;
+    root->parent = auxR;
+    auxL->parent = auxR;
+
+    root->depth++;
+    auxL->depth -= 2;
+    tree_inorder(root->right, node_depthInc);
+    tree_inorder(root->left, node_depthDec);
+    tree_inorder(auxL->right, node_depthDec);
+}
+
+void subtree_doubleRotateLeft(Tree* tree, Node* root) {
+    Node* auxR = root->right;
+    Node* auxL = auxR->left;
+
+    root->right = auxL->left;
+    root->right->parent = root;
+    auxR->left = auxL->right;
+    auxR->left->parent = auxR;
+    auxL->parent = root->parent;
+    root->parent = auxL;
+    auxR->parent = auxL;
+
+    root->depth++;
+    auxL->depth -= 2;
+    tree_inorder(root->left, node_depthInc);
+    tree_inorder(root->right, node_depthDec);
+    tree_inorder(auxR->left, node_depthDec);
 }
