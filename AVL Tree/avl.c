@@ -288,6 +288,8 @@ void subtree_rotateRight(Tree* tree, Node* root) {
     aux->depth--;
     tree_inorder(root->right, node_depthInc);
     tree_inorder(aux->left, node_depthDec);
+
+    root->factor = 0;
 }
 
 void subtree_rotateLeft(Tree* tree, Node* root) {
@@ -305,6 +307,8 @@ void subtree_rotateLeft(Tree* tree, Node* root) {
     aux->depth--;
     tree_inorder(root->left, node_depthInc);
     tree_inorder(aux->right, node_depthDec);
+
+    root->factor = 0;
 }
 
 void subtree_doubleRotateRight(Tree* tree, Node* root) {
@@ -324,6 +328,12 @@ void subtree_doubleRotateRight(Tree* tree, Node* root) {
     tree_inorder(root->right, node_depthInc);
     tree_inorder(root->left, node_depthDec);
     tree_inorder(auxL->right, node_depthDec);
+
+    if (auxR->factor == 1) root->factor = -1;
+    else root->factor = 0;
+
+    if (auxR->factor == -1) auxL->factor = 1;
+    else auxL->factor = 0;
 }
 
 void subtree_doubleRotateLeft(Tree* tree, Node* root) {
@@ -343,4 +353,10 @@ void subtree_doubleRotateLeft(Tree* tree, Node* root) {
     tree_inorder(root->left, node_depthInc);
     tree_inorder(root->right, node_depthDec);
     tree_inorder(auxR->left, node_depthDec);
+
+    if (auxL->factor == -1) root->factor = 1;
+    else root->factor = 0;
+
+    if (auxL->factor == 1) auxR->factor = -1;
+    else root->factor = 0;
 }
