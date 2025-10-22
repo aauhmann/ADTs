@@ -13,7 +13,7 @@ bool tree_empty(Tree tree) {
 void tree_insert(Tree* tree, type key) {
     Node* new = (Node*)malloc(sizeof(Node));
     Node* aux = tree->root;
-    bool neededRotation = false;
+    bool needRotation = false;
 
     new->key = key;
     new->left = new->right = NULL;
@@ -30,17 +30,23 @@ void tree_insert(Tree* tree, type key) {
     
     while (true) {
         if (key < aux->key) {
-            if (abs(aux->factor++) == 2) neededRotation = true;
             if (aux->left == NULL) {
                 aux->left = new;
+                new->depth = aux->depth + 1;
+                if (aux->right == NULL)
+                    needRotation = node_fixFactor(aux);
+                else aux->factor++;
                 break;
             }
             else aux = aux->left;
         }
         else if (key > aux->key) {
-            if (abs(aux->factor--) == 2) neededRotation = true;
             if (aux->right == NULL) {
                 aux->right = new;
+                new->depth = aux->depth + 1;
+                if (aux->left == NULL)
+                    needRotation = node_fixFactor(aux);
+                else aux->factor--;
                 break;
             }
             else aux = aux->right;
@@ -52,16 +58,30 @@ void tree_insert(Tree* tree, type key) {
     }
 
     new->parent = aux;
-    new->depth = aux->depth + 1;
 
     printf("Key %d inserted at depth %d", key, new->depth);
     
-    if (neededRotation) {
+    if (needRotation) {
         subtree_rotate(tree, aux);
         tree_height(tree);
     }
     else if (tree->height < new->depth)
         tree->height = new->depth;
+}
+
+bool node_fixFactor(Node* node) {
+    bool needRotation = false;
+
+    while (node != NULL) {
+        node->factor = node_factor(node);
+
+        if (abs(node->factor) > 1)
+            needRotation = true;
+
+        node = node->parent;
+    }
+
+    return needRotation;
 }
 
 void node_print(Node* node) {
@@ -71,8 +91,9 @@ void node_print(Node* node) {
     printf("%d", node->key);
 }
 
-void node_depth(Node* node) {
+void node_depthAndFactor(Node* node) {
     printf("\nDepth: %d", node->depth);
+    printf("\nFactor: %d", node->factor);
 }
 
 void node_depthDec(Node* node) {
@@ -97,6 +118,9 @@ void node_clear(Node* node) {
 void node_clearByKey(Tree* tree, Node* node) {
     Node* parent = node->parent;
     Node* aux;
+    type key = 0;
+    int d = 0;
+    bool needRotation = false;
 
     if (node->left != NULL && node->right != NULL) {
         aux = node->left;
@@ -161,11 +185,28 @@ void node_clearByKey(Tree* tree, Node* node) {
         if (node == tree->root) tree->root = NULL;
     }
     
-    printf("Key %d removed (possible tree reestruturation)", node->key);
+    printf("Key %d removed (possible tree rearrange)", node->key);
     
     free(node);
 
+    if (tree_factorCheck(tree->root, &d, &key, &needRotation)) {
+        Node* rotAux = tree_searchByKey(tree, key, NULL);
+        subtree_rotate(tree, rotAux);
+    }
+
     tree_height(tree);
+}
+
+bool tree_factorCheck(Node* root, int* currentDepth, type* key, bool* needRotation) {
+    if (abs(root->factor) > 1 && root->depth > *currentDepth) {
+        *currentDepth = root->depth;
+        *key = root->key;
+        *needRotation = true;
+    }
+    tree_factorCheck(root->left, currentDepth, key, needRotation);
+    tree_factorCheck(root->right, currentDepth, key, needRotation);
+    
+    return *needRotation;
 }
 
 Node* tree_searchByKey(Tree* tree, type key, NodeFunction function) {
@@ -227,15 +268,15 @@ void tree_height(Tree* tree) {
         tree->height = 0;
     } else {
         tree->height = 0;
-        tree_maxDepth(tree->root, &tree->height);
+        subtree_maxDepth(tree->root, &tree->height);
     }
 }
 
-void tree_maxDepth(Node* root, int* maxDepth) {
+void subtree_maxDepth(Node* root, int* maxDepth) {
     if (root != NULL) {
         if (root->depth > *maxDepth) *maxDepth = root->depth;
-        tree_maxDepth(root->left, maxDepth);
-        tree_maxDepth(root->right, maxDepth);
+        subtree_maxDepth(root->left, maxDepth);
+        subtree_maxDepth(root->right, maxDepth);
     }
 }
 
@@ -253,6 +294,8 @@ void tree_clear(Tree* tree) {
 void subtree_rotate(Tree* tree, Node* root) {
     Node* parent;
 
+    printf("\nenter rotate");
+
     while (root != NULL) {
         parent = root->parent;
 
@@ -261,12 +304,16 @@ void subtree_rotate(Tree* tree, Node* root) {
                 subtree_rotateRight(tree, root);
             else
                 subtree_doubleRotateRight(tree, root);
+
+            break;
         }
         else if (root->factor < -1) {
             if (root->right->factor < 0)
                 subtree_rotateLeft(tree, root);
             else
                 subtree_doubleRotateLeft(tree, root);
+
+            break;
         }
 
         root = parent;
@@ -274,13 +321,22 @@ void subtree_rotate(Tree* tree, Node* root) {
 }
 
 void subtree_rotateRight(Tree* tree, Node* root) {
-    Node* aux = root->parent;
+    Node* aux = root->left;
+    Node* parent = root->parent;
 
-    if (aux == tree->root)
-        tree->root = root;
+    printf("\nRight rotation at key %d", root->key);
+
+    if (root == tree->root)
+        tree->root = aux;
 
     root->left = aux->right;
-    aux->parent = root->parent;
+    if (root->left != NULL)
+        root->left->parent = root;
+    aux->parent = parent;
+    if (parent != NULL) {
+        if (parent->left == root) parent->left = aux;
+        else parent->right = aux;
+    }
     aux->right = root;
     root->parent = aux;
 
@@ -290,16 +346,26 @@ void subtree_rotateRight(Tree* tree, Node* root) {
     tree_inorder(aux->left, node_depthDec);
 
     root->factor = 0;
+    aux->factor = node_factor(aux);
 }
 
 void subtree_rotateLeft(Tree* tree, Node* root) {
     Node* aux = root->right;
+    Node* parent = root->parent;
+
+    printf("\nLeft rotation at key %d", root->key);
 
     if (root == tree->root)
         tree->root = aux;
 
     root->right = aux->left;
-    aux->parent = root->parent;
+    if (root->right != NULL)
+        root->right->parent = root;
+    aux->parent = parent;
+    if (parent != NULL) {
+        if (parent->left == root) parent->left = aux;
+        else parent->right = aux;
+    }
     aux->left = root;
     root->parent = aux;
 
@@ -309,19 +375,34 @@ void subtree_rotateLeft(Tree* tree, Node* root) {
     tree_inorder(aux->right, node_depthDec);
 
     root->factor = 0;
+    aux->factor = node_factor(aux);
 }
 
 void subtree_doubleRotateRight(Tree* tree, Node* root) {
     Node* auxL = root->left;
     Node* auxR = auxL->right;
+    Node* parent = root->parent;
+
+    printf("\nDouble right rotation at key %d", root->key);
+
+    if (root == tree->root)
+        tree->root = auxR;
 
     auxL->right = auxR->left;
-    auxR->left->parent = auxL->right;
+    if (auxL->right != NULL)
+        auxL->right->parent = auxL;
     root->left = auxR->right;
-    auxR->right->parent = root;
+    if (root->left != NULL)
+        root->left->parent = root;
     auxR->parent = root->parent;
+    if (parent != NULL) {
+        if (parent->left == root) parent->left = auxR;
+        else parent->right = auxR;
+    }
     root->parent = auxR;
     auxL->parent = auxR;
+    auxR->left = auxL;
+    auxR->right = root;
 
     root->depth++;
     auxL->depth -= 2;
@@ -334,19 +415,35 @@ void subtree_doubleRotateRight(Tree* tree, Node* root) {
 
     if (auxR->factor == -1) auxL->factor = 1;
     else auxL->factor = 0;
+
+    auxR->factor = node_factor(auxR);
 }
 
 void subtree_doubleRotateLeft(Tree* tree, Node* root) {
     Node* auxR = root->right;
     Node* auxL = auxR->left;
+    Node* parent = root->parent;
+
+    printf("\nDouble left rotation at key %d", root->key);
+
+    if (root == tree->root)
+        tree->root = auxL;
 
     root->right = auxL->left;
-    root->right->parent = root;
+    if (root->right != NULL)
+        root->right->parent = root;
     auxR->left = auxL->right;
-    auxR->left->parent = auxR;
+    if (auxR->left != NULL) 
+        auxR->left->parent = auxR;
     auxL->parent = root->parent;
+    if (parent != NULL) {
+        if (parent->left == root) parent->left = auxL;
+        else parent->right = auxL;
+    }
     root->parent = auxL;
     auxR->parent = auxL;
+    auxL->left = root;
+    auxL->right = auxR;
 
     root->depth++;
     auxL->depth -= 2;
@@ -358,5 +455,26 @@ void subtree_doubleRotateLeft(Tree* tree, Node* root) {
     else root->factor = 0;
 
     if (auxL->factor == 1) auxR->factor = -1;
-    else root->factor = 0;
+    else auxR->factor = 0;
+
+    auxL->factor = node_factor(auxL);
+}
+
+int node_factor(Node* node) {
+    int hl = node->depth, hr = node->depth;
+
+    subtree_maxDepth(node->left, &hl);
+
+    subtree_maxDepth(node->right, &hr);
+
+    return (hl - hr);
+}
+
+void tree_factor(Node* root, int* factor) {
+    int aux = node_factor(root);
+
+    if (aux > *factor) *factor = aux;
+
+    if (root->left != NULL) tree_factor(root->left, factor);
+    if (root->right != NULL) tree_factor(root->right, factor);
 }
