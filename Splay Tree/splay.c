@@ -172,7 +172,7 @@ void sptInsert(SPT* tree, type key) {
     // printf("\nOut of height count");
 }
 
-static NodeSPT* aptNodeSearch(SPT tree, type key) {
+static NodeSPT* sptNodeSearch(SPT tree, type key) {
     NodeSPT* aux = tree.root;
 
     // Iterates ultil it finds the node with the same key
@@ -200,7 +200,7 @@ NodeSPT* sptAccess(SPT* tree, type key) {
         return NULL;
     }
 
-    NodeSPT* aux = aptNodeSearch(*tree, key);
+    NodeSPT* aux = sptNodeSearch(*tree, key);
 
     if (aux == NULL) {
         printf("\nKey %d not in the tree", key);
@@ -233,7 +233,7 @@ void sptNodePrintDepth(SPT tree, type key) {
         return;
     }
 
-    NodeSPT* aux = aptNodeSearch(tree, key);
+    NodeSPT* aux = sptNodeSearch(tree, key);
 
     if (aux == NULL) {
         printf("\nKey %d not in the tree", key);
@@ -250,7 +250,7 @@ void sptNodePrint(SPT tree, type key) {
         return;
     }
 
-    NodeSPT* aux = aptNodeSearch(tree, key);
+    NodeSPT* aux = sptNodeSearch(tree, key);
 
     if (aux == NULL) {
         printf("\nKey %d not in the tree", key);
