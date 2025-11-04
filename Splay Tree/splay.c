@@ -1,6 +1,6 @@
 #include "splay.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 SPT sptInitialize() {
     return (SPT){NULL, 0}; // Returns an empty splay tree with 0 height
@@ -19,7 +19,7 @@ static int sptHeightRecursive(NodeSPT* node) {
     
     if (leftHeight > rightHeight)
         return leftHeight + 1;
-    else
+    else // rightHeight > leftHeight
         return rightHeight + 1;
 }
 
@@ -49,6 +49,10 @@ static void sptZig(NodeSPT* node, SPT* tree) {
 
     if (grandpa == NULL) // Means there's no one above the node, so it must be the tree's root
         tree->root = node;
+    else if (father == grandpa->left)
+        grandpa->left = node;
+    else // father == grandpa->right
+        grandpa->right = node;
 }
 
 static void sptZag(NodeSPT* node, SPT* tree) {
@@ -65,28 +69,38 @@ static void sptZag(NodeSPT* node, SPT* tree) {
 
     if (grandpa == NULL) // Means there's no one above the node, so it must be the tree's root
         tree->root = node;
+    else if (father == grandpa->left)
+        grandpa->left = node;
+    else // father == grandpa->right
+        grandpa->right = node;
 }
 
 static void sptSplaying(NodeSPT* node, SPT* tree) {
-    NodeSPT* father = node->parent;
-    NodeSPT* grandpa = father->parent;
+    NodeSPT* father;
+    NodeSPT* grandpa;
 
     while (tree->root != node) {
+        father = node->parent;
+        grandpa = father->parent;
+
         if (father->left == node) {
             // Left child node cases
             if (father == tree->root) {
                 // Zig rotation case
                 sptZig(node, tree);
+                // printf("\nZig");
             }
             else if (grandpa->left == father) {
                 // Zig-Zig rotation case
                 sptZig(father, tree);
                 sptZig(node, tree);
+                // printf("\nZig-Zig");
             }
             else if (grandpa->right == father) {
                 // Zig-Zag rotation case
                 sptZig(node, tree);
                 sptZag(node, tree);
+                // printf("\nZig-Zag");
             }
         }
         else {
@@ -94,18 +108,22 @@ static void sptSplaying(NodeSPT* node, SPT* tree) {
             if (father == tree->root) {
                 // Zag rotation case
                 sptZag(node, tree);
+                // printf("\nZag");
             }
             else if (grandpa->right == father) {
                 // Zag-Zag rotation case
                 sptZag(father, tree);
                 sptZag(node, tree);
+                // printf("\nZag-Zag");
             }
             else if (grandpa->left == father) {
                 // Zag-Zig rotation case
                 sptZag(node, tree);
                 sptZig(node, tree);
+                // printf("\nZag-Zig");
             }
         }
+        // sptPrint(*tree);
     }
 }
 
@@ -157,26 +175,16 @@ void sptInsert(SPT* tree, type key) {
 
     // Not empty tree case
     sptSplaying(new, tree);
-    sptHeight(tree->root);
-}
-
-static int sptNodeDepth(NodeSPT* node) {
-    int depth = 0;
-
-    while (node != NULL) {
-        // Counts the node's depth by counting how many antecessor it has
-        depth++;
-        node = node->parent;
-    }
-
-    return depth;
+    printf("\nOut of splaying");
+    sptHeight(tree);
+    printf("\nOut of height count");
 }
 
 NodeSPT* sptAccess(SPT* tree, type key) {
     if (sptEmpty(*tree)) {
         // Checks if the splay tree is empty
         printf("\nEmpty splay tree");
-        return;
+        return NULL;
     }
 
     NodeSPT* aux = tree->root;
@@ -184,9 +192,9 @@ NodeSPT* sptAccess(SPT* tree, type key) {
     // Iterates ultil it finds the node with the same key
     while (aux->key != key) {
         // Searches for the node with the key
-        if (aux->key < key)
+        if (key < aux->key)
             aux = aux->left;
-        else // aux->key > key
+        else // key > aux->key
             aux = aux->right;
 
         // Checks if the search ends in a dead end
@@ -199,9 +207,21 @@ NodeSPT* sptAccess(SPT* tree, type key) {
 
     // Node with the key is found
     sptSplaying(aux, tree);
-    sptHeight(tree->root);
+    sptHeight(tree);
 
     return aux;
+}
+
+int sptNodeDepth(NodeSPT* node) {
+    int depth = 0;
+
+    while (node != NULL) {
+        // Counts the node's depth by counting how many antecessor it has
+        depth++;
+        node = node->parent;
+    }
+
+    return depth;
 }
 
 static void sptPrintRecursive(NodeSPT* node) {
@@ -209,7 +229,12 @@ static void sptPrintRecursive(NodeSPT* node) {
         for (int i = 0; i < sptNodeDepth(node); i++) // Prints '=' equal times to the node's depth count
             printf("=");
 
-        printf("%d\n", node->key);
+        printf("%d", node->key);
+        if (node->left != NULL) printf(" (%d", node->left->key);
+        else printf(" (Nan");
+        if (node->right != NULL) printf(", %d)", node->right->key);
+        else printf(", Nan)");
+        printf("\n");
 
         sptPrintRecursive(node->left);
         sptPrintRecursive(node->right);
@@ -217,8 +242,12 @@ static void sptPrintRecursive(NodeSPT* node) {
 }
 
 void sptPrint(SPT tree) {
-    printf("\n\n----- PRINTING SPLAY TREE -----\n");
-    sptPrintRecursive(tree.root);
+    if (sptEmpty(tree))
+        printf("\n\nEmpty splay tree");
+    else {
+        printf("\n\n----- PRINTING SPLAY TREE -----\n");
+        sptPrintRecursive(tree.root);
+    }
 }
 
 static void sptClearRecursive(NodeSPT* node) {
@@ -238,6 +267,9 @@ void sptClear(SPT* tree) {
     }
 
     sptClearRecursive(tree->root);
+
+    tree->root = NULL;
+    tree->height = 0;
 
     printf("\nSplay tree successfully cleared");
 }

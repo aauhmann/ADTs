@@ -19,5 +19,6 @@ typedef struct s_SPT {
 SPT sptInitialize();
 void sptInsert(SPT* tree, type key);
 NodeSPT* sptAccess(SPT* tree, type key);
+int sptNodeDepth(NodeSPT* node);
 void sptPrint(SPT tree);
 void sptClear(SPT* tree);
