@@ -40,16 +40,14 @@ int main() {
                 printf("\nKey: ");
                 scanf("%d", &key);
                 getchar();
-                aux = sptAccess(&spt, key);
-                printf("\nKey: %d", aux->key);
+                sptNodePrint(spt, key);
                 break;
 
             case 3:
                 printf("\nKey: ");
                 scanf("%d", &key);
                 getchar();
-                aux = sptAccess(&spt, key);
-                printf("\nDepth: ", sptNodeDepth(aux));
+                sptNodePrintDepth(spt, key);
                 break;
 
             case 4:
@@ -59,6 +57,10 @@ int main() {
                 break;
 
             case 5:
+                printf("\nKey: ");
+                scanf("%d", &key);
+                getchar();
+                sptNodeDelete(&spt, key);
                 break;
 
             case 6:

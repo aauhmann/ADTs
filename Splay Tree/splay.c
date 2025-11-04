@@ -27,14 +27,6 @@ static void sptHeight(SPT* tree) {
     tree->height = sptHeightRecursive(tree->root);
 }
 
-static void sptSplit(SPT* tree) {
-
-}
-
-static void sptJoin(SPT* tree) {
-
-}
-
 static void sptZig(NodeSPT* node, SPT* tree) {
     NodeSPT* father = node->parent;
     NodeSPT* grandpa = father->parent;
@@ -175,19 +167,13 @@ void sptInsert(SPT* tree, type key) {
 
     // Not empty tree case
     sptSplaying(new, tree);
-    printf("\nOut of splaying");
+    // printf("\nOut of splaying");
     sptHeight(tree);
-    printf("\nOut of height count");
+    // printf("\nOut of height count");
 }
 
-NodeSPT* sptAccess(SPT* tree, type key) {
-    if (sptEmpty(*tree)) {
-        // Checks if the splay tree is empty
-        printf("\nEmpty splay tree");
-        return NULL;
-    }
-
-    NodeSPT* aux = tree->root;
+static NodeSPT* aptNodeSearch(SPT tree, type key) {
+    NodeSPT* aux = tree.root;
 
     // Iterates ultil it finds the node with the same key
     while (aux->key != key) {
@@ -200,9 +186,25 @@ NodeSPT* sptAccess(SPT* tree, type key) {
         // Checks if the search ends in a dead end
         if (aux == NULL) {
             // Node with the key isn't in the tree
-            printf("\nKey %d not in the tree", key);
             return NULL;
         }
+    }
+
+    return aux;
+}
+
+NodeSPT* sptAccess(SPT* tree, type key) {
+    if (sptEmpty(*tree)) {
+        // Checks if the splay tree is empty
+        printf("\nEmpty splay tree");
+        return NULL;
+    }
+
+    NodeSPT* aux = aptNodeSearch(*tree, key);
+
+    if (aux == NULL) {
+        printf("\nKey %d not in the tree", key);
+        return NULL;
     }
 
     // Node with the key is found
@@ -212,7 +214,7 @@ NodeSPT* sptAccess(SPT* tree, type key) {
     return aux;
 }
 
-int sptNodeDepth(NodeSPT* node) {
+static int sptNodeDepth(NodeSPT* node) {
     int depth = 0;
 
     while (node != NULL) {
@@ -222,6 +224,87 @@ int sptNodeDepth(NodeSPT* node) {
     }
 
     return depth;
+}
+
+void sptNodePrintDepth(SPT tree, type key) {
+    if (sptEmpty(tree)) {
+        // Checks if the splay tree is empty
+        printf("\nEmpty splay tree");
+        return;
+    }
+
+    NodeSPT* aux = aptNodeSearch(tree, key);
+
+    if (aux == NULL) {
+        printf("\nKey %d not in the tree", key);
+        return;
+    }
+
+    printf("Depth: %d", sptNodeDepth(aux));
+}
+
+void sptNodePrint(SPT tree, type key) {
+    if (sptEmpty(tree)) {
+        // Checks if the splay tree is empty
+        printf("\nEmpty splay tree");
+        return;
+    }
+
+    NodeSPT* aux = aptNodeSearch(tree, key);
+
+    if (aux == NULL) {
+        printf("\nKey %d not in the tree", key);
+        return;
+    }
+
+    printf("Key: %d", aux->key);
+}
+
+static void sptSplit(SPT* tree, SPT auxTrees[]) {
+    auxTrees[0] = (SPT){tree->root->left, 0};
+    auxTrees[1] = (SPT){tree->root->right, 0};
+}
+
+static SPT sptJoin(SPT auxTrees[]) {
+    NodeSPT* aux = auxTrees[0].root;
+
+    // Stops when finds the rightmost node
+    while (aux->right != NULL) {
+        // Searches for node with max key (the rightmost node)
+        aux = aux->right;
+    }
+
+    // printf("\nOut of join while");
+
+    sptSplaying(aux, &auxTrees[0]);
+    // printf("\nOut of join splay");
+
+    SPT tree = (SPT){aux, 0};
+    aux->right = auxTrees[1].root;
+    if (auxTrees[1].root != NULL)
+        auxTrees[1].root->parent = aux;
+
+    return tree;
+}
+
+void sptNodeDelete(SPT* tree, type key) {
+    if (sptEmpty(*tree)) {
+        // Checks if the splay tree is empty
+        printf("\nEmpty splay tree");
+        return;
+    }
+
+    NodeSPT* aux = sptAccess(tree, key);
+
+    SPT auxTrees[2];
+    sptSplit(tree, auxTrees);
+    // printf("\nSuccesfull split");
+    *tree = sptJoin(auxTrees);
+    // printf("\nSuccessfull join");
+
+    sptHeight(tree);
+
+    printf("\nNode with key %d deleted", key);
 }
 
 static void sptPrintRecursive(NodeSPT* node) {

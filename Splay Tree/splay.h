@@ -11,7 +11,7 @@ typedef struct s_SplayNode {
     struct s_SplayNode* right;
 } NodeSPT;
 
-typedef struct s_SPT {
+typedef struct s_SplayTree {
     NodeSPT* root;
     int height;
 } SPT;
@@ -19,6 +19,8 @@ typedef struct s_SPT {
 SPT sptInitialize();
 void sptInsert(SPT* tree, type key);
 NodeSPT* sptAccess(SPT* tree, type key);
-int sptNodeDepth(NodeSPT* node);
+void sptNodePrintDepth(SPT tree, type key);
+void sptNodePrint(SPT tree, type key);
 void sptPrint(SPT tree);
+void sptNodeDelete(SPT* tree, type key);
 void sptClear(SPT* tree);
