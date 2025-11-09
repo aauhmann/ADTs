@@ -178,17 +178,13 @@ static NodeSPT* sptNodeSearch(SPT tree, type key) {
     // Iterates ultil it finds the node with the same key
     while (aux->key != key) {
         // Searches for the node with the key
-        if (key < aux->key)
+        if (key < aux->key && aux->left != NULL)
             aux = aux->left;
-        else // key > aux->key
+        else if (key > aux->key && aux->right != NULL)
             aux = aux->right;
-
-        // Checks if the search ends in a dead end
-        if (aux == NULL) {
-            // Node with the key isn't in the tree
-            return NULL;
+        else
+            return aux; // Returns the last accessed node if the desired key isn't in the tree
         }
-    }
 
     return aux;
 }
@@ -202,7 +198,8 @@ NodeSPT* sptAccess(SPT* tree, type key) {
 
     NodeSPT* aux = sptNodeSearch(*tree, key);
 
-    if (aux == NULL) {
+    if (aux->key != key) {
+        sptSplaying(aux->parent, tree); // Splays the searched node's parent
         printf("\nKey %d not in the tree", key);
         return NULL;
     }
@@ -235,7 +232,7 @@ void sptNodePrintDepth(SPT tree, type key) {
 
     NodeSPT* aux = sptNodeSearch(tree, key);
 
-    if (aux == NULL) {
+    if (aux->key != key) {
         printf("\nKey %d not in the tree", key);
         return;
     }
@@ -252,7 +249,7 @@ void sptNodePrint(SPT tree, type key) {
 
     NodeSPT* aux = sptNodeSearch(tree, key);
 
-    if (aux == NULL) {
+    if (aux->key != key) {
         printf("\nKey %d not in the tree", key);
         return;
     }
@@ -261,28 +258,21 @@ void sptNodePrint(SPT tree, type key) {
 }
 
 static void sptSplit(SPT* tree, SPT auxTrees[]) {
-    auxTrees[0] = (SPT){tree->root->left, 0};
+    auxTrees[0] = (SPT){tree->root, 0};
     auxTrees[1] = (SPT){tree->root->right, 0};
+
+    // Cuts the connection between the new trees
+    auxTrees[0].root->right = NULL;
+    if (auxTrees[1].root != NULL) auxTrees[1].root->parent = NULL;
 }
 
-static SPT sptJoin(SPT auxTrees[]) {
-    NodeSPT* aux = auxTrees[0].root;
+static SPT sptJoin(SPT auxTrees[], NodeSPT* root) {
+    SPT tree = (SPT){root, 0};
 
-    // Stops when finds the rightmost node
-    while (aux->right != NULL) {
-        // Searches for node with max key (the rightmost node)
-        aux = aux->right;
-    }
-
-    // printf("\nOut of join while");
-
-    sptSplaying(aux, &auxTrees[0]);
-    // printf("\nOut of join splay");
-
-    SPT tree = (SPT){aux, 0};
-    aux->right = auxTrees[1].root;
+    // Connects right tree to the new root
+    root->right = auxTrees[1].root;
     if (auxTrees[1].root != NULL)
-        auxTrees[1].root->parent = aux;
+        auxTrees[1].root->parent = root;
 
     return tree;
 }
@@ -294,12 +284,44 @@ void sptNodeDelete(SPT* tree, type key) {
         return;
     }
 
-    NodeSPT* aux = sptAccess(tree, key);
+    NodeSPT* aux = sptAccess(tree, key); // The deleted node
 
-    SPT auxTrees[2];
+    if (aux->key != key) {
+        // Ends function in case the accessed node isn't the onde with the desired key
+        printf("\nNode not found");
+        return;
+    }
+
+    // Case there's only one node on the tree
+    if (aux->right == NULL && aux->left == NULL) {
+        free(aux);
+        printf("\nNode with key %d (tree root) deleted", key);
+        tree->root = NULL;
+        tree->height = 0;
+        return;
+    }
+
+    SPT auxTrees[2]; // Array of the auxiliar trees
     sptSplit(tree, auxTrees);
     // printf("\nSuccesfull split");
-    *tree = sptJoin(auxTrees);
+
+    auxTrees[0].root = aux->left;
+    auxTrees[0].root->parent = NULL; // Cuts connection with the soon deleted node
+    free(aux); // Deletes node
+
+    NodeSPT* newRoot = auxTrees[0].root;
+    // Stops when finds the rightmost node in the left tree
+    while (newRoot->right != NULL) {
+        // Searches for node with max key (the rightmost node)
+        newRoot = newRoot->right;
+    }
+    // printf("\nOut of rightmost node while");
+
+    sptSplaying(newRoot, &auxTrees[0]); // newRoot becomes the left tree's root
+    // printf("\nOut of join splay");
+
+
+    *tree = sptJoin(auxTrees, newRoot); // Reconnects the auxiliar trees
     // printf("\nSuccessfull join");
 
     sptHeight(tree);
