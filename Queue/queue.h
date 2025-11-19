@@ -6,21 +6,20 @@
 
 typedef int type;
 
-typedef struct Node {
-    struct Node* next;
+typedef struct s_QueueNode {
+    struct s_QueueNode* next;
     type data;
-} Node;
+} QNode;
 
-typedef struct Queue {
-    Node* front;
-    Node* rear;
+typedef struct s_Queue {
+    QNode* head;
+    QNode* tail;
     int size;
 } Queue;
 
-void queue_initialize(Queue* queue);
-bool queue_isEmpty(Queue queue);
-void queue_insert(Queue* queue, type data);
-type queue_remove(Queue* queue);
-void queue_print(Queue queue);
-type queue_front(Queue queue);
-void queue_clear(Queue* queue);
+Queue queueInitialize();
+void queueInsert(Queue* queue, type data);
+void queueNodeRemove(Queue* queue);
+void queuePrint(Queue queue);
+QNode* queuePeek(Queue queue);
+void queueClear(Queue* queue);

@@ -3,12 +3,11 @@
 typedef enum {INSERT, REMOVE, FRONT, PRINT, CLEAR, EXIT} MENU;
 
 int main() {
-    Queue queue;
-    MENU menu;
+    Queue queue = queueInitialize();
+    QNode* node = NULL;
+    MENU menu = 0;
 
-    queue_initialize(&queue);
-
-    while (1) {
+    while (menu != EXIT) {
         printf("\n--- MENU ---");
         printf("\n 1. Insert");
         printf("\n 2. Remove");
@@ -25,29 +24,27 @@ int main() {
                 type data;
                 printf("\nInsert int: ");
                 scanf("%d", &data);
-                queue_insert(&queue, data);
+                queueInsert(&queue, data);
                 break;
 
             case REMOVE:
-                queue_remove(&queue);
+                queueNodeRemove(&queue);
                 break;
 
             case PRINT:
-                queue_print(queue);
+                queuePrint(queue);
                 break;
 
             case FRONT:
-                queue_front(queue);
+                node = queuePeek(queue);
                 break;
 
             case CLEAR:
-                queue_clear(&queue);
+                queueClear(&queue);
                 break;
 
             case EXIT:
-                printf("\nExiting...\n");
-                return 0;
-
+                printf("\nExiting program...\n");
                 break;
 
             default:
@@ -56,4 +53,6 @@ int main() {
         }
         printf("\n");
     }
+
+    return 0;
 }

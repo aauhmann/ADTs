@@ -1,99 +1,93 @@
 #include "queue.h"
 
-void queue_initialize(Queue* queue) {
-    queue->front = NULL;
-    queue->rear = NULL;
-    queue->size = 0;
+Queue queueInitialize() {
+    return (Queue){NULL, NULL, 0};
 }
 
-bool queue_isEmpty(Queue queue) {
-    if (queue.front == NULL)
+static bool queueIsEmpty(Queue queue) {
+    if (queue.head == NULL)
         return true;
     else
         return false;
 }
 
-void queue_insert(Queue* queue, type data) {
-    Node* new = (Node*)malloc(sizeof(Node));
+void queueInsert(Queue* queue, type data) {
+    QNode* new = (QNode*)malloc(sizeof(QNode));
 
     new->data = data;
+    new->next = NULL;
     queue->size++;
 
-    if (queue_isEmpty(*queue)) {
-        queue->front = new;
-        queue->rear = new;
+    if (queueIsEmpty(*queue)) {
+        queue->head = new;
+        queue->tail = new;
     } else {
-        queue->rear->next = new;
-        queue->rear = new;
-        new->next = NULL;
+        queue->tail->next = new;
+        queue->tail = new;
     }
 
     printf("New size: %d", queue->size);
 }
 
-type queue_remove(Queue* queue) {
-    if (queue_isEmpty(*queue)) {
+void queueNodeRemove(Queue* queue) {
+    if (queueIsEmpty(*queue)) {
         printf("\nEmpty queue");
         return;
     }
 
-    Node* aux = queue->front;
-    type data = queue->front->data;
+    QNode* aux = queue->head;
 
     queue->size--;
 
-    aux = queue->front->next;
-    free(queue->front);
-    queue->front = aux;
+    aux = queue->head->next;
+    free(queue->head);
+    queue->head = aux;
 
     printf("\nNew size: %d", queue->size);
-
-    return data;
 }
 
-void queue_print(Queue queue) {
-    if (queue_isEmpty(queue)) {
+void queuePrint(Queue queue) {
+    if (queueIsEmpty(queue)) {
         printf("\nEmpty queue");
         return;
     }
 
     printf("\n - PRINTING -");
+    printf("\n\n->");
 
-    int i = 0;
-    while (i < queue.size) {
-        printf("\nNode %d:", i);
-        printf("\n Int: %d", queue.front->data);
-        queue.front = queue.front->next;
-        i++;
+    while (queue.head != NULL) {
+        printf("\n%d", queue.head->data);
+        queue.head = queue.head->next;
     }
 
-    printf("\n- END PRINTING -");
+    printf("\n<-");
+    printf("\n\n- END PRINTING -");
 }
 
-type queue_front(Queue queue) {
-    if (queue_isEmpty(queue)) {
+QNode* queuePeek(Queue queue) {
+    if (queueIsEmpty(queue)) {
         printf("\nEmpty queue");
-        return;
+        return NULL;
     }
 
     printf("\n- FIRST NODE -");
-    printf("\n  Int: %d", queue.front->data);
+    printf("\n  Int: %d", queue.head->data);
 
-    return queue.front->data;
+    return queue.head;
 }
 
-void queue_clear(Queue* queue) {
-    if (queue_isEmpty(*queue)) {
+void queueClear(Queue* queue) {
+    if (queueIsEmpty(*queue)) {
         printf("\nEmpty queue");
         return;
     }
 
-    Node* aux = queue->front;
+    QNode* aux = queue->head;
 
     while (aux != NULL) {
-        queue->front = queue->front->next;
+        queue->head = queue->head->next;
         free(aux);
-        aux = queue->front;
+        aux = queue->head;
     }
 
     queue->size = 0;
