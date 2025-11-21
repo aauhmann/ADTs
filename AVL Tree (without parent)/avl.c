@@ -14,8 +14,8 @@ static int avlNodeHeight(NodeAVL* node) {
     if (node == NULL)
         return 0;
     
-    int leftHeight = avlHeightRecursive(node->left);
-    int rightHeight = avlHeightRecursive(node->right);
+    int leftHeight = avlNodeHeight(node->left);
+    int rightHeight = avlNodeHeight(node->right);
     
     if (leftHeight > rightHeight)
         return leftHeight + 1;
@@ -28,6 +28,8 @@ static void avlTreeHeight(AVL* tree) {
 }
 
 static int avlNodeFactorBalance(NodeAVL* node) {
+    if (node == NULL) return 0;
+
     int leftHeight = avlNodeHeight(node->left);
     int rightHeight = avlNodeHeight(node->right);
 
@@ -83,14 +85,16 @@ static void avlRotateLeft(NodeAVL* child, NodeAVL* node, NodeAVL* father) {
     }
 }
 
-static void avlRotation(NodeAVL* node, NodeAVL* father) {
+static void avlRotation(NodeAVL* node, NodeAVL* father, AVL* tree) {
     if (node->factor > 1) {
         if (node->left->factor > 0) {
             // Right rotation case
+            if (node == tree->root) tree->root = node->left; // Updates tree's root
             avlRotateRight(node->left, node, father);
         }
         else { // If node->left->factor < 0
             // Double right rotation case
+            if (node == tree->root) tree->root = node->left->right; // Updates tree's root
             avlRotateLeft(node->left->right, node->left, node);
             avlRotateRight(node->left, node, father);
         }
@@ -98,17 +102,19 @@ static void avlRotation(NodeAVL* node, NodeAVL* father) {
     else { // node->factor < -1
         if (node->right->factor < 0) {
             // Left rotation case
+            if (node == tree->root) tree->root = node->right; // Updates tree's root
             avlRotateLeft(node->right, node, father);
         }
         else { // If node->right->factor > 0
             // Double left rotation case
+            if (node == tree->root) tree->root = node->right->left; // Updates tree's root
             avlRotateRight(node->right->left, node->right, node);
             avlRotateLeft(node->right, node, father);
         }
     }
 }
 
-static NodeAVL* avlInsertRecursion(NodeAVL* node, NodeAVL* father, type key) {
+static NodeAVL* avlInsertRecursion(NodeAVL* node, NodeAVL* father, type key, AVL* tree) {
     if (node == NULL) {
         // Empty space to insertion
         NodeAVL* new = (NodeAVL*)malloc(sizeof(NodeAVL));
@@ -133,9 +139,9 @@ static NodeAVL* avlInsertRecursion(NodeAVL* node, NodeAVL* father, type key) {
     NodeAVL* aux;
 
     if (key < node->key)
-        aux = avlInsertRecursion(node->left, node, key);
+        aux = avlInsertRecursion(node->left, node, key, tree);
     else // If (key > node->key)
-        aux = avlInsertRecursion(node->right, node, key);
+        aux = avlInsertRecursion(node->right, node, key, tree);
 
     // If a node has been inserted
     if (aux != NULL) {
@@ -143,7 +149,7 @@ static NodeAVL* avlInsertRecursion(NodeAVL* node, NodeAVL* father, type key) {
 
         // Case the node's unbalanced
         if (abs(node->factor) > 1)
-            avlRotation(node, father);
+            avlRotation(node, father, tree);
     }
 
     return aux;
@@ -159,7 +165,7 @@ void avlInsert(AVL* tree, type key) {
         return;
     }
 
-    NodeAVL* aux = avlInsertRecursion(tree->root, NULL, key);
+    NodeAVL* aux = avlInsertRecursion(tree->root, NULL, key, tree);
 
     if (aux == NULL) {
         printf("\nNode with key %d already in tree", key);
@@ -259,10 +265,10 @@ void avlNodePrint(AVL tree, type key) {
     printf("Key: %d", aux->key);
 }
 
-static NodeAVL* avlNodeSubstitution(NodeAVL* node, NodeAVL* father) {
+static NodeAVL* avlNodeSubstitution(NodeAVL* node, NodeAVL* father, AVL* tree) {
     if (node == NULL) return father;
 
-    NodeAVL* rightmost = avlNodeSubstitution(node->right, node);
+    NodeAVL* rightmost = avlNodeSubstitution(node->right, node, tree);
 
     if (node == rightmost)
         father->right = node->left;
@@ -270,13 +276,13 @@ static NodeAVL* avlNodeSubstitution(NodeAVL* node, NodeAVL* father) {
         avlNodeFactorBalance(node);
         // Case the node's unbalanced
         if (abs(node->factor) > 1)
-            avlRotation(node, father);
+            avlRotation(node, father, tree);
     }
 
     return rightmost;
 }
 
-static NodeAVL* avlNodeDeleteRecursion(NodeAVL* node, NodeAVL* father, type key) {
+static NodeAVL* avlNodeDeleteRecursion(NodeAVL* node, NodeAVL* father, type key, AVL* tree) {
     if (node == NULL) {
         printf("\nNode with key %d not in tree", key);
         return NULL;
@@ -301,7 +307,7 @@ static NodeAVL* avlNodeDeleteRecursion(NodeAVL* node, NodeAVL* father, type key)
             if (node->left->right == NULL)
                 rightmost = node->left;
             else
-                rightmost = avlNodeSubstitution(node->left->right, node);
+                rightmost = avlNodeSubstitution(node->left->right, node, tree);
 
             rightmost->right = node->right;
             rightmost->left = node->left;
@@ -318,15 +324,15 @@ static NodeAVL* avlNodeDeleteRecursion(NodeAVL* node, NodeAVL* father, type key)
     NodeAVL* aux;
 
     if (key < node->key)
-        aux = avlDeleteRecursion(node->left, node, key);
+        aux = avlNodeDeleteRecursion(node->left, node, key, tree);
     else // If (key > node->key)
-        aux = avlDeleteRecursion(node->right, node, key);
+        aux = avlNodeDeleteRecursion(node->right, node, key, tree);
 
     // If the node exists and will be deleted
     if (aux != NULL) {
         // Case the node's unbalanced
         if (abs(avlNodeFactorBalance(node)) > 1)
-            avlRotation(node, father);
+            avlRotation(node, father, tree);
     }
 
     return aux;
@@ -339,7 +345,7 @@ void avlNodeDelete(AVL* tree, type key) {
         return;
     }
 
-    NodeAVL* aux = avlNodeDeleteRecursion(tree->root, NULL, key);
+    NodeAVL* aux = avlNodeDeleteRecursion(tree->root, NULL, key, tree);
 
     if (aux == NULL) {
         printf("\nNode with key %d not in tree", key);
@@ -366,6 +372,8 @@ static void avlPrintRecursive(NodeAVL* node, int depth) {
         for (int i = 0; i < depth; i++) // Prints '=' equal times to the node's depth count
             printf("=");
 
+        avlNodeFactorBalance(node);
+
         printf("%d", node->key);
         printf(" - FB: %d", node->factor);
         if (node->left != NULL) printf(" (%d", node->left->key);
@@ -390,8 +398,8 @@ void avlPrint(AVL tree) {
 
 static void avlClearRecursion(NodeAVL* node) {
     if (node != NULL) {
-        avlClearRecursive(node->left);
-        avlClearRecursive(node->right);
+        avlClearRecursion(node->left);
+        avlClearRecursion(node->right);
 
         free(node);
     }
@@ -404,7 +412,7 @@ void avlClear(AVL* tree) {
         return;
     }
 
-    avlClearRecursive(tree->root);
+    avlClearRecursion(tree->root);
 
     tree->root = NULL;
     tree->height = tree->factor = 0;

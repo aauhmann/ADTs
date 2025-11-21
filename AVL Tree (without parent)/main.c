@@ -28,7 +28,7 @@ int main() {
             case 1:
                 printf("\nKey: ");
                 scanf("%d", &key);
-                tree_insert(&tree, key);
+                avlInsert(&tree, key);
                 break;
 
             case 2:
