@@ -4,6 +4,8 @@
 #include "stdio.h"
 #include "stdbool.h"
 
+#define DATA_NULL 0
+
 typedef int type;
 
 typedef struct s_QueueNode {
@@ -19,7 +21,7 @@ typedef struct s_Queue {
 
 Queue queueInitialize();
 void queueInsert(Queue* queue, type data);
-void queueNodeRemove(Queue* queue);
+type queueNodeRemove(Queue* queue);
 void queuePrint(Queue queue);
-QNode* queuePeek(Queue queue);
+type queuePeek(Queue queue);
 void queueClear(Queue* queue);

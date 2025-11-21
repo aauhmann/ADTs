@@ -29,13 +29,14 @@ void queueInsert(Queue* queue, type data) {
     printf("New size: %d", queue->size);
 }
 
-void queueNodeRemove(Queue* queue) {
+type queueNodeRemove(Queue* queue) {
     if (queueIsEmpty(*queue)) {
         printf("\nEmpty queue");
-        return;
+        return DATA_NULL;
     }
 
     QNode* aux = queue->head;
+    type data = aux->data;
 
     queue->size--;
 
@@ -44,6 +45,8 @@ void queueNodeRemove(Queue* queue) {
     queue->head = aux;
 
     printf("\nNew size: %d", queue->size);
+
+    return data;
 }
 
 void queuePrint(Queue queue) {
@@ -64,16 +67,16 @@ void queuePrint(Queue queue) {
     printf("\n\n- END PRINTING -");
 }
 
-QNode* queuePeek(Queue queue) {
+type queuePeek(Queue queue) {
     if (queueIsEmpty(queue)) {
         printf("\nEmpty queue");
-        return NULL;
+        return DATA_NULL;
     }
 
     printf("\n- FIRST NODE -");
     printf("\n  Int: %d", queue.head->data);
 
-    return queue.head;
+    return queue.head->data;
 }
 
 void queueClear(Queue* queue) {
